@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Actor implements Serializable, Externalizable {
 
 	private static final long serialVersionUID = 1L;
+	public static final long VERSION = 1L;
 
 	@Id
 	@NotEmpty
