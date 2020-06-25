@@ -10,14 +10,22 @@ import static com.tngtech.archunit.library.GeneralCodingRules.NO_CLASSES_SHOULD_
 import static com.tngtech.archunit.library.GeneralCodingRules.NO_CLASSES_SHOULD_USE_JAVA_UTIL_LOGGING;
 import static com.tngtech.archunit.library.GeneralCodingRules.NO_CLASSES_SHOULD_USE_JODATIME;
 
+import java.io.Externalizable;
+import java.io.Serializable;
+
 import javax.persistence.Entity;
 
 import org.slf4j.Logger;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 
 @AnalyzeClasses(packages = "com.github.raonigabriel.imdb")
 public class ArchitectureTest {
@@ -44,6 +52,12 @@ public class ArchitectureTest {
 		.because("All entities should be in the same package");
 
 	@ArchTest
+	private final ArchRule externalizable_version_control =  classes().that()
+		.implement(Externalizable.class).should().implement(Serializable.class)
+		.andShould(HANDLE_VERSION_PROPERLY);
+
+	
+	@ArchTest
 	private void no_access_to_standard_streams_as_method(JavaClasses classes) {
 		noClasses().should(ACCESS_STANDARD_STREAMS).check(classes);
 	}
@@ -55,5 +69,24 @@ public class ArchitectureTest {
 		.andShould().beStatic()
 		.andShould().beFinal()
 		.because("we agreed on this convention");
-
+	
+	private static final ArchCondition<? super JavaClass> HANDLE_VERSION_PROPERLY = 
+			new ArchCondition<JavaClass>("have a public static final field named VERSION of type long") {
+				@Override
+				public void check(JavaClass item, ConditionEvents events) {
+		        	if (!item.getAllFields().stream().anyMatch(f -> {
+		        		return "VERSION".equals(f.getName()) 
+		        				&& f.getModifiers().contains(JavaModifier.PUBLIC)
+		        				&& f.getModifiers().contains(JavaModifier.STATIC)
+		        				&& f.getModifiers().contains(JavaModifier.FINAL)
+		        				&&f.getRawType().isAssignableFrom(Long.TYPE);
+		        	})) {
+		        		String message = "public static final long VERSION was not found on " + item.getName();
+		        		events.add(SimpleConditionEvent.violated(item, message));
+		        	}
+					
+				}
+		
+	};
+	
 }
