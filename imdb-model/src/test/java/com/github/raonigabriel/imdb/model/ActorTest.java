@@ -1,4 +1,4 @@
-package com.example.imdb.model;
+package com.github.raonigabriel.imdb.model;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,11 +24,12 @@ public class ActorTest {
 			actor.setId("jd00001");
 			actor.setName("John Doe");
 			actor.setBirthDate(LocalDate.of(1970, 12, 25));
+			actor.setHeight(170);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try (ObjectOutput out = new ObjectOutputStream(baos)) {
 				out.writeObject(actor);
 			}
-			assertEquals(83, baos.toByteArray().length);
+			assertEquals(99, baos.toByteArray().length);
 			try (ObjectInput in = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
 				actor = (Actor) in.readObject();
 			}
@@ -36,6 +37,7 @@ public class ActorTest {
 			assertEquals("jd00001", actor.getId());
 			assertEquals("John Doe", actor.getName());
 			assertEquals(LocalDate.of(1970, 12, 25), actor.getBirthDate());
+			assertEquals(170, actor.getHeight());
 		});
 	}
 
